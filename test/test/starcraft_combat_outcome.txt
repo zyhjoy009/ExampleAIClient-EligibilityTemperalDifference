@@ -1,0 +1,40 @@
+Game ended: win=1, lose=0
+1 episode: sum attack | alive step | average attack 
+36	208	0
+36	208	0
+30	208	0
+Game ended: win=2, lose=0
+2 episode: sum attack | alive step | average attack 
+34	215	0
+29	215	0
+39	215	0
+Game ended: win=3, lose=0
+3 episode: sum attack | alive step | average attack 
+37	196	0
+36	196	0
+28	196	0
+Game ended: win=4, lose=0
+4 episode: sum attack | alive step | average attack 
+35	227	0
+31	227	0
+35	227	0
+Game ended: win=5, lose=0
+5 episode: sum attack | alive step | average attack 
+33	236	0
+28	236	0
+38	236	0
+Game ended: win=6, lose=0
+6 episode: sum attack | alive step | average attack 
+38	270	0
+37	270	0
+35	270	0
+Game ended: win=7, lose=0
+7 episode: sum attack | alive step | average attack 
+37	243	0
+36	243	0
+37	243	0
+Game ended: win=8, lose=0
+8 episode: sum attack | alive step | average attack 
+29	233	0
+34	233	0
+38	233	0
