@@ -3,7 +3,9 @@ use temperal difference + eligibility trace to learn policy for starcraft combat
 
 # INTRODUCTION
 Now I setup a reinforcement learning framework to teach 3 Goliath to beat 6 Zealot
+
 The RL method I use is temperal difference learning + eligibility trace
+
 I use a network to represent Q functions, and the policy is produced directly calculating the greedy action
 
 ## NN INPUT 
