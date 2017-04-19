@@ -9,11 +9,11 @@ The RL method I use is temperal difference learning + eligibility trace
 I use a network to represent Q functions, and the policy is produced directly calculating the greedy action
 
 ## NN INPUT 
-The network input is composed of 3 parts:
----- 1. Current step agent state informatoin [dim=42]: 
--------- own weapon cool down time [0~1], dim=1
--------- own hitpoint [0~1], dim=1
--------- self units distance in 8 directions; multiple distances are SUM in the same direction if existed; if no units in certain direction, it is 0; if unit is out of sight range, it is 0.05; dim=8
+The network input is composed of 3 parts.
+---- 1. Current step agent state informatoin [dim=42]:.
+-------- own weapon cool down time [0~1], dim=1.
+-------- own hitpoint [0~1], dim=1.
+-------- self units distance in 8 directions; multiple distances are SUM in the same direction if existed; if no units in certain direction, it is 0; if unit is out of sight range, it is 0.05; dim=8.
 -------- self units distance in 8 directions; multiple distances are MAXIMIZE in the same direction if existed; if no units in certain direction, it is 0; if unit is out of sight range, it is 0.05; dim=8
 -------- enemy units distance in 8 directions; multiple distances are SUM in the same direction if existed; blablabla
 -------- enemy units distance in 8 directions; multiple distances are MAXIMIZE in the same direction if existed; blablabla
