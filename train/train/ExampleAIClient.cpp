@@ -64,17 +64,10 @@ int main(int argc, const char* argv[])
 	sprintf_s(file_nn_str, "starcraft_combat_nn_%d_%d_%d.db", dim_input, dim_hidden, dim_output); 
 	net.Load(file_nn_str);
 	// 
-/*	std::string file_reward_str = "starcraft_combat_reward.txt"; 
+	std::string file_reward_str = "starcraft_combat_reward.txt"; 
 	std::ofstream os_reward(file_reward_str, std::ofstream::out | std::ofstream::app); 
 	if (!os_reward.is_open())
-		std::ferror(NULL); */
-	std::string file_outcome_str = "starcraft_combat_outcome.txt";
-	std::ofstream os_outcome(file_outcome_str, std::ofstream::out | std::ofstream::app);
-	if (!os_outcome.is_open())
-	std::ferror(NULL); 
-	// record win/lose episode
-	int record_win = 0;
-	int record_lose = 0;
+		std::ferror(NULL); 
 
 	std::cout << "Connecting..." << std::endl;;
 	reconnect();
@@ -123,8 +116,6 @@ int main(int argc, const char* argv[])
 		std::map<int, int> set_record_steps; 
 		// last step own units state and action
 		std::map<int, std::vector<double> > set_last_states; 
-		// record agents attack count
-		std::map<int, int> set_record_attack_nums; 
 
 		while(Broodwar->isInGame())
 		{
@@ -135,11 +126,6 @@ int main(int argc, const char* argv[])
 				// OnFrame case
 				case EventType::MatchFrame:
 				{
-					if (BWAPI::Broodwar->getFrameCount() > 50000)
-					{
-						BWAPI::Broodwar->restartGame();
-						break;
-					}
 					BWAPI::Broodwar->drawTextScreen(10, 10, "%d -th frame", BWAPI::Broodwar->getFrameCount());
 					drawExtendedInterface();
 					DrawAction(set_last_actions, set_last_action_targets);
@@ -167,7 +153,7 @@ int main(int argc, const char* argv[])
 					lastFrameCount = Broodwar->getFrameCount();
 					// calculate last step's temepral difference
 					// delta = reward+gamma*Q(t)-Q(t-1)
-/*					for (auto &u : Broodwar->self()->getUnits())
+					for (auto &u : Broodwar->self()->getUnits())
 					{
 						// check if it is the first step
 						if (set_last_Qs.count(u->getID()) > 0)
@@ -198,7 +184,7 @@ int main(int argc, const char* argv[])
 						// check if it is the first step
 						if (set_temperal_diffs.count(u->getID()) > 0)
 							set_rl_agents[u->getID()].TrainCombatNN(set_temperal_diffs[u->getID()], alpha / num_agent);
-					} */
+					} 
 					// clear record data
 					num_agent = 0;
 					// let's do new step
@@ -208,57 +194,19 @@ int main(int argc, const char* argv[])
 						if (set_record_steps.count(u->getID()) <= 0)
 							set_record_steps[u->getID()] = 0;
 						set_record_steps[u->getID()]++;
-						if (set_record_attack_nums.count(u->getID()) <= 0)
-							set_record_attack_nums[u->getID()] = 0;
-						if (set_last_cool_downs[u->getID()] < u->getGroundWeaponCooldown())
-							set_record_attack_nums[u->getID()]++; 
-						std::vector<double> state = GetUnitInfoRepresent(u)-0.5;
-						size_t action; 
-						if (BWAPI::Broodwar->enemy()->getUnits().empty() 
-							&& u->getUnitsInRadius(SIGHT_RANGE, BWAPI::Filter::IsOwned).empty())
-						{
-							std::vector<double> own_max_info(state.begin() + 10, state.begin() + 10 + DIM_DIRECTION);
-							double own_max_info_max = own_max_info[0]; 
-							action = 0;
-							for (size_t i = 0; i < DIM_DIRECTION; i++)
-							{
-								if (own_max_info_max < own_max_info[i])
-								{
-									action = i;
-									own_max_info_max = own_max_info[i]; 
-								}
-							}
-						}
-						else if (!BWAPI::Broodwar->enemy()->getUnits().empty() 
-							&& u->getUnitsInRadius(u->getType().groundWeapon().maxRange(), BWAPI::Filter::IsEnemy).empty())
-						{
-							std::vector<double> last_enemy_max_info(state.begin() + 26, state.begin() + 26 + DIM_DIRECTION);
-							double enemy_max_info_max = last_enemy_max_info[0];
-							action = 0;
-							for (size_t i = 0; i < DIM_DIRECTION; i++)
-							{
-								if (enemy_max_info_max < last_enemy_max_info[i])
-								{
-									action = i;
-									enemy_max_info_max = last_enemy_max_info[i];
-								}
-							}
-						}
-						else
-						{
-							if (set_last_states.count(u->getID()) <= 0)
-								set_last_states.insert(std::pair<int, std::vector<double> >(u->getID(), state));
-							if (set_last_actions.count(u->getID()) <= 0)
-								set_last_actions.insert(std::pair<int, size_t>(u->getID(), DIM_DIRECTION));
-							std::vector<double> nn_input(state);
-							nn_input.insert(nn_input.end(), set_last_states[u->getID()].begin(), set_last_states[u->getID()].end());
-							std::vector<double> action_input(DIM_DIRECTION + 1, 0.0);
-							action_input[set_last_actions[u->getID()]] = 1;
-							nn_input.insert(nn_input.end(), action_input.begin(), action_input.end());
-							if (set_rl_agents.count(u->getID()) <= 0)
-								set_rl_agents.insert(std::pair<int, CombatRL>(u->getID(), CombatRL(&net)));
-							action = set_rl_agents[u->getID()].GetAction(nn_input, epsilon);
-						}
+						std::vector<double> state = GetUnitInfoRepresent(u) - 0.5;
+						if (set_last_states.count(u->getID()) <= 0)
+							set_last_states.insert(std::pair<int, std::vector<double> >(u->getID(), state));
+						if (set_last_actions.count(u->getID()) <= 0)
+							set_last_actions.insert(std::pair<int, size_t>(u->getID(), DIM_DIRECTION));
+						std::vector<double> nn_input(state);
+						nn_input.insert(nn_input.end(), set_last_states[u->getID()].begin(), set_last_states[u->getID()].end());
+						std::vector<double> action_input(DIM_DIRECTION + 1, 0.0);
+						action_input[set_last_actions[u->getID()]] = 1;
+						nn_input.insert(nn_input.end(), action_input.begin(), action_input.end());
+						if (set_rl_agents.count(u->getID()) <= 0)
+							set_rl_agents.insert(std::pair<int, CombatRL>(u->getID(), CombatRL(&net)));
+						size_t action = set_rl_agents[u->getID()].GetAction(nn_input, epsilon);
 						// if no move direction, hold position
 						if (action == DIM_DIRECTION)
 						{
@@ -298,23 +246,17 @@ int main(int argc, const char* argv[])
 						set_last_actions[u->getID()] = action; 
 						set_last_states[u->getID()] = state; 
 						set_last_cool_downs[u->getID()] = u->getGroundWeaponCooldown(); 
-/*						set_last_own_hitpoints[u->getID()] = u->getHitPoints() + u->getShields();
+						set_last_own_hitpoints[u->getID()] = u->getHitPoints() + u->getShields();
 						set_last_Qs[u->getID()] = set_rl_agents[u->getID()].GetQValue(nn_input, action);
-						set_rl_agents[u->getID()].UpdateEligibility(action, lambda, gamma); */
+						set_rl_agents[u->getID()].UpdateEligibility(action, lambda, gamma); 
 					}
 					break;
 				}
 				case EventType::MatchEnd:
 					if (e.isWinner())
-					{
 						Broodwar << "I won the game" << std::endl;
-						record_win++;
-					}
 					else
-					{
 						Broodwar << "I lost the game" << std::endl;
-						record_lose++;
-					}
 					break;
 				case EventType::SendText:
 					if (e.getText() == "s")
@@ -354,7 +296,7 @@ int main(int argc, const char* argv[])
 					break;
 				case EventType::UnitDestroy:
 				{
-/*					BWAPI::Unit u = e.getUnit(); 
+					BWAPI::Unit u = e.getUnit(); 
 					if (u->getPlayer()->getID() != BWAPI::Broodwar->self()->getID())
 						continue; 
 					if (set_last_Qs.count(u->getID()) > 0)
@@ -370,7 +312,7 @@ int main(int argc, const char* argv[])
 					// w = w+alpha*delta*eligibility
 					// check if it is the first step
 					if (set_temperal_diffs.count(u->getID()) > 0)
-						set_rl_agents[u->getID()].TrainCombatNN(set_temperal_diffs[u->getID()], alpha / num_agent); */
+						set_rl_agents[u->getID()].TrainCombatNN(set_temperal_diffs[u->getID()], alpha / num_agent); 
 					break;
 				}
 				case EventType::UnitMorph:
@@ -396,15 +338,8 @@ int main(int argc, const char* argv[])
 			reconnect();
 			}
 		}
-		std::cout << "Game ended: win=" << record_win << ", lose=" << record_lose << std::endl; 
-		std::cout << episode_num << " episode: sum attack | alive step | average attack " << std::endl;
-		for (auto& n : set_record_attack_nums)
-			std::cout << n.second << "\t" << set_record_steps[n.first] << "\t" << n.second / set_record_steps[n.first] << std::endl;
-		os_outcome << "Game ended: win=" << record_win << ", lose=" << record_lose << std::endl;
-		os_outcome << episode_num << " episode: sum attack | alive step | average attack " << std::endl;
-		for (auto& n : set_record_attack_nums)
-			os_outcome << n.second << "\t" << set_record_steps[n.first] << "\t" << n.second / set_record_steps[n.first] << std::endl;
-		/*		std::cout << episode_num << " episode: sum reward | alive step | average reward " << std::endl;
+		std::cout << "Game ended" << std::endl;
+		std::cout << episode_num << " episode: sum reward | alive step | average reward " << std::endl;
 		for (auto& r : set_record_rewards)
 			std::cout << r.second << "\t" << set_record_steps[r.first] << "\t" << r.second / set_record_steps[r.first] << std::endl;
 		os_reward << "Game ended" << std::endl;
@@ -413,14 +348,14 @@ int main(int argc, const char* argv[])
 			os_reward << r.second << "\t" << set_record_steps[r.first] << "\t" << r.second / set_record_steps[r.first] << std::endl;
 		if (episode_num % 100 == 0)
 		{
-			char file_nn_str_[100]; 
-			std::sprintf(file_nn_str_, "starcraft_combat_nn_%d_%d_%d(%d).db", dim_input, dim_hidden, dim_output, episode_num); 
-			net.Save(file_nn_str_); 
+			char file_nn_str_[100];
+			sprintf_s(file_nn_str_, "starcraft_combat_nn_%d_%d_%d(%d).db", dim_input, dim_hidden, dim_output, episode_num);
+			net.Save(file_nn_str_);
 		}
 		if (episode_num % 1000 == 0)
-			epsilon = std::max(0.1, epsilon - 0.1); 
-		if (episode_num % 2000 == 0)
-			alpha = 0.001; */
+			epsilon = std::max(0.05, epsilon - 0.1);
+		if (episode_num % 1000 == 0)
+			alpha = std::max(0.001, alpha - 0.001);
 	}
 	std::cout << "Press ENTER to continue..." << std::endl;
 	std::cin.ignore();
